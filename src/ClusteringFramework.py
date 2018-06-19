@@ -1,3 +1,4 @@
+from sklearn.cluster import KMeans
 class ClusteringFramework(object):
     def __init__(self,
                  algorithm='kmeans',
