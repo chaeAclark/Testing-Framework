@@ -1,12 +1,21 @@
+import numpy as np
+import pandas as pd
+import sklearn as sk
+from time import clock
+from itertools import *
+from sklearn.metrics import roc_auc_score
 class TestingFramework(object):
     def __init__(self,
                  model        = ClusteringFramework,
                  folder       = 'datasets',
                  filenames    = ['gas_clustered_hc_easy_0.005_0.005.csv','gas_clustered_hc_easy_0.005_0.005.csv'],
-                 parameters   = {'outlier_scoring':['dist2center','cluster_size'],
+                 parameters   = {'outlier_scoring':['dist2center','cluster_size','dist2neighbor'],
+                                 'k':[2,10,20,30],
                                  'norm_type_column01':['none','standard','0-1'],
                                  'norm_type_column02':['none','standard','0-1'],
-                                 'norm_type_row01':['none','l1_norm','l2_norm','Inf_norm']},
+                                 'norm_type_row01':['none','l1_norm','l2_norm','Inf_norm'],
+                                 'outlier_scaling':['0-1','standard'],
+                                 'outlier_final':['max','pca']},
                  comb_params  = ['outlier_scoring'],
                  score_column = 'outlier_score',
                  score_method = roc_auc_score
