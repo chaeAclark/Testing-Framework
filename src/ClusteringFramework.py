@@ -1,4 +1,9 @@
+import numpy as np
+import pandas as pd
+import sklearn as sk
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.metrics import pairwise_distances
 class ClusteringFramework(object):
     def __init__(self,
                  algorithm='kmeans',
@@ -33,7 +38,7 @@ class ClusteringFramework(object):
                 model = self.__optimal_clusters(X)
             else:
                 self.optimal_k = self.k
-                model = KMeans(k).fit(X)
+                model = KMeans(self.k).fit(X)
         self.model   = model
         df           = self.__score_outliers(X)
         df           = self.__scale_outliers(df)
@@ -52,7 +57,7 @@ class ClusteringFramework(object):
             denom = np.array(np.max(X, axis=1),ndmin=2).T
             X     = np.divide(X, denom)
         elif technique.lower() != 'none':
-            print("The input row normalization is not recognized/supported!")
+            print("The input row normalization, is not recognized/supported!",technique)
             print("Using 'none' row normalization")
         return X
         
@@ -66,12 +71,17 @@ class ClusteringFramework(object):
             stds  = np.array(np.std(X, axis=0),ndmin=2)
             X     = np.divide(np.subtract(X,means), stds)
         elif technique.lower() != 'none':
-            print("The input column normalization is not recognized/supported!")
+            print("The input column normalization is not recognized/supported!",technique)
             print("Using 'none' column normalization")
             print('--')
         return X
     
     def __optimal_clusters(self,X):
+        N,D            = X.shape
+        k_range        = list(self.k_range)
+        if np.max(k_range) >= D:
+            k_range = [val for val in k_range if val < D]
+        self.k_range   = k_range
         inertia_list   = [(KMeans(k).fit(X)).inertia_ for k in self.k_range]
         diff01_array   = np.diff(inertia_list)
         diff02_array   = np.diff(diff01_array)
@@ -87,8 +97,8 @@ class ClusteringFramework(object):
                 df['cluster_size']   = self.__score_cluster_size(X)
             elif score.lower()       == 'dist2center':
                 df['dist2center']    = self.__score_dist2center(X)
-            elif score.lower()       == 'dist2neighbors':
-                df['dist2neighbors'] = self.__score_dist2neighbor(X)
+            elif score.lower()       == 'dist2neighbor':
+                df['dist2neighbor'] = self.__score_dist2neighbor(X)
         return df
                 
     def __score_cluster_size(self,X):
@@ -119,7 +129,7 @@ class ClusteringFramework(object):
     def __finalize_outliers(self,df,technique,X):
         columns     = list(df.columns)
         columns.remove('entity')
-        Y           = df[columns].values
+        Y           = np.array(df[columns].values,ndmin=2)
         if technique.lower() == 'max':
             df['outlier_score'] = np.max(Y,axis=1)
         elif technique.lower() == 'pca':
